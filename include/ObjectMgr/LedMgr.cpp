@@ -10,7 +10,7 @@ LedMgr::LedMgr(
 
   diag_signal[DIAG_SIGNAL_LENGTH] = '\0';
   diag_order[DIAG_SIGNAL_LENGTH] = '\0';
-  mode = 0; //set special sequence mode
+  mode = 0; //select how sequence are send
   return;
 }
 
@@ -27,8 +27,27 @@ void LedMgr::update_link_pose(const std::string& link_name, const geometry_msgs:
 /* } */
 
 void LedMgr::update_data(std::vector<bool> i_sequence, double i_seq_bit_rate, double i_mes_bit_rate){
-  sequence = i_sequence;
+
+  if (!enable_manchester){
+    sequence = i_sequence;
+  } else {
+    // Manchester Coding - IEEE 802.3 Conversion: 1 = [0,1]; 0 = [1,0]
+    std::vector<bool> sequence_manchester (i_sequence.size()* 2 , false); // initialize vector twice the length of the original sequence
+    unsigned int cnt = 0;
+    for (const auto i : i_sequence) {
+      if (i) {
+        sequence_manchester.at(cnt+1) = true; // equals [False, True]
+      } else {
+        sequence_manchester.at(cnt) = true;  // equals [True, False]
+      }
+      cnt+=2;
+    }
+    sequence = sequence_manchester;
+  }
+
   /* if (diag_seq.length() < (int)(sequence.size())) */
+
+  // diag_seq  is the sequence as a string
   diag_seq = "";
   for (auto s: sequence){
     diag_seq += (s?'1':'0');
@@ -74,15 +93,18 @@ void LedMgr::update_timing(double i_seq_bit_rate, double i_mes_bit_rate){
   if (i_seq_bit_rate > 0){
     seq_bit_rate = i_seq_bit_rate;
   }
+  // seq_duration = 14 / 60 = .23 [Bit / Frame]
   seq_duration = (double)(sequence.size())/seq_bit_rate;
  
   if (i_mes_bit_rate > 0){
     mes_bit_rate = i_mes_bit_rate;
   }
+  // mes duration = 0  --- mes size = 0 --- mes bit rate = 60
   mes_duration = (double)(message.size())/mes_bit_rate;
-  /* std::cout << "updated: mes_bit_rate:" << mes_bit_rate << std::endl; */
-  /* std::cout << "updated: message size:" << message.size() << std::endl; */
-  /* std::cout << "updated: mes_duration:" << mes_duration << std::endl; */
+   std::cout << "updated: mes_bit_rate:" << mes_bit_rate << std::endl; 
+   std::cout << "updated: message size:" << message.size() << std::endl; 
+   std::cout << "updated: mes_duration:" << mes_duration << std::endl;
+   std::cout << "seq_duration:" << seq_duration <<std::endl; 
 }
 
 char toHex(int input){
@@ -99,6 +121,11 @@ char toHex(int input){
   }
 }
 
+
+/* 
+runs at 60 Hz,  called for each camera on RX UAV and LED on TX UAV
+returns true, if current sequence is 1 -> updates led pose
+*/
 bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
   if (!m_pose_initialized)
     return false;
@@ -110,7 +137,7 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
     if (!frequency_initialized)
       return false;
 
-    if (f < 0.001){ //p.m. equals zero = always on
+    if (f < 0.001001){ //p.m. equals zero = always on
       output = m_pose;
       return true;
     }
@@ -122,9 +149,11 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
   }
   else if (mode == 0){
     dsi++;
+
+    // reset dsi print the current Signal 
     if (dsi>=DIAG_SIGNAL_LENGTH){
       dsi = 0;
-      /* std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
+       std::cout << "Diagonal sequence:" << diag_seq << " with the diag signal:\n" << diag_signal << std::endl;
     }
     if (!sequence_initialized){
       diag_signal[dsi] = '0';
@@ -132,13 +161,14 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
       return false;
     }
 
-    int seq_index = (int)(fmod(nowTime, seq_duration)*seq_bit_rate);
+    // seq_index = from 0 to 13 dependent on the current time
+    int seq_index = (int)(fmod(nowTime, seq_duration)*seq_bit_rate); // ( timeInSec % 0.23 ) * 60 
     seq_index = std::min((int)(sequence.size())-1,seq_index);//sanitization
+    // only update pose, when the sequence is 1 / LED is turned on
     if (sequence[seq_index]){
       output = m_pose;
       diag_signal[dsi] = '1';
       diag_order[dsi] = toHex(seq_index);
-      return true;
     }
     else{
       diag_signal[dsi] = '0';
@@ -150,7 +180,7 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
     dsi++;
     if (dsi>=DIAG_SIGNAL_LENGTH){
       dsi = 0;
-      /* std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
+       /*std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
     }
     if (!message_initialized){
       diag_signal[dsi] = '0';
@@ -182,6 +212,28 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
       diag_order[dsi] = toHex(mes_index);
       return false;
     }
+  }
+  else if (mode == 2) { 
+    
+
+    // int seq_index = (int)(fmod(nowTime, seq_duration)*seq_bit_rate); // ( timeInSec % 0.23 ) * 60 
+    // seq_index = std::min((int)(sequence.size())-1,seq_index);//sanitization
+    // float modTime = fmod(nowTime, 0.032);
+    // std::cout << "The curr time " << nowTime << " mod Time "<<modTime << std::endl;
+    // bool high = true;
+
+    // // 1 = 0, 1 
+    // if (sequence[seq_index]){
+    //   if (high){
+    //     output = m_pose;
+    //     return true;
+    //   } else {
+    //     return false;
+    //   }
+    // } else {
+
+    //   return false;
+    // }
   }
 
   return false;

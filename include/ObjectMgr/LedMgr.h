@@ -36,8 +36,10 @@ class LedMgr : public ObjectMgr
     int mode; //0 - static frequency, 1 - selected sequences
 
     std::vector<bool> sequence;
+    bool enable_manchester = true;
+
     std::vector<bool> message;
-    double seq_duration;
+    double seq_duration; // time for 1 bit per frame [Bit / Frame] - if bigger than 1 -> Not possible
     double mes_duration;
     double seq_bit_rate;
     double mes_bit_rate;
@@ -51,9 +53,8 @@ class LedMgr : public ObjectMgr
     bool message_initialized = false;
 
 
-
-    char diag_signal[DIAG_SIGNAL_LENGTH+1];
-    char diag_order[DIAG_SIGNAL_LENGTH+1];
+    char diag_signal[DIAG_SIGNAL_LENGTH+1]; // signal dependent on the number of LEDs attached to the UAV
+    char diag_order[DIAG_SIGNAL_LENGTH+1]; // same in hex
     int dsi = -1;
     std::string diag_seq;
 };
