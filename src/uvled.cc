@@ -93,7 +93,7 @@ public:
       fs = 60.0;  // camera framerate
       fm = fs;
     }
-
+// TODO: Throws error for Beacon thing
     if (_sdf->HasElement("number")) {
       n = _sdf->GetElement("number")->Get<int>();
       std::cout << "LED number is " << n << std::endl;

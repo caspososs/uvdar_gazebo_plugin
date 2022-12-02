@@ -273,11 +273,11 @@ public:
   //}
 
 private:
-  /* TransferThread //{ */
+// Triggered with the Frame Rate of the camera -> runs at 60 Hz
   void TransferThread() {
-    /* clock_t begin, end; */
-    /* clock_t begin_p, end_p; */
-    /* double  elapsedTime; */
+    //  clock_t begin, end; 
+    //  clock_t begin_p, end_p; 
+    //  double  elapsedTime; 
     pengine->InitForThread();
 
     /* ros::Rate rt(f + ((double(rand()%100)/50.0)-1.0)); //to simulate the possible difference between the camera framerate and the blinking generator bit rate. This has to be done here, since LEDs on a single UAV are always synchronized w.r.t. each other. */
@@ -289,7 +289,7 @@ private:
     std::unordered_map<std::string, std::shared_ptr<LedMgr>> leds_by_name_local;
     /* std::pair<std::string, std::shared_ptr<LedMgr> > led; */
     while (ros::ok()){
-      /* begin         = std::clock(); */
+      // begin         = std::clock(); 
       //CHECK: Optimize the following
       /* for (int j = 0; j < cvimg.image.rows; j++) { */
       /*   for (int i = 0; i < cvimg.image.cols; i++) { */
@@ -307,6 +307,7 @@ private:
         cameras_local = cameras;
       }
 
+      // call for each camera on UAV 
       for (auto &cam : cameras_local)
       {
         {
@@ -317,20 +318,23 @@ private:
         msg_ptcl.header.stamp = ros::Time::now();
         msg_ptcl.points.clear();
         double sec_time = msg_ptcl.header.stamp.toSec();
+        // called for each LED on UAV
         for (auto& led : leds_by_name_local){
-          if (led.second->get_pose(cur_led_pose, sec_time)){
-            if (drawPose_virtual({cur_led_pose,cam.pose}, output)){
+          if (led.second->get_pose(cur_led_pose, sec_time)){ // is true if Signal is One -> LED Poses are updated -> LED is turned on
+            if (drawPose_virtual({cur_led_pose,cam.pose}, output)){ 
+              // the relative pose of each seen LED by the camera 
               pt.x = output.x;
               pt.y = output.y;
               pt.z = output.z;
+              // std::cout << pt.x << " " << pt.y  << " " << pt.z << " " << std::endl;
               msg_ptcl.points.push_back(pt);
             }
           }
         }
         cam.virtual_points_publisher.publish(msg_ptcl);
-        /* end         = std::clock(); */
-        /* elapsedTime = double(end - begin) / CLOCKS_PER_SEC; */
-        /* std::cout << "UV CAM: Drawing took : " << elapsedTime << " s" << std::endl; */
+        //  end         = std::clock();
+        //  elapsedTime = double(end - begin) / CLOCKS_PER_SEC; 
+        //  std::cout << "UV CAM: Drawing took : " << elapsedTime << " s" << std::endl;
       }
       rt.sleep();
     }
@@ -435,10 +439,9 @@ public:
 public:
 
 /* linkCallback //{ */
+// triggered @ Frame Rate speed -> 60 Hz
 void linkCallback(const gazebo_msgs::LinkStatesConstPtr &link_states)
 {
-      /* std::cout << " HERE " << std::endl; */
-
   /* ros::Time temp_time = ros::Time::now(); */
   /* if ((temp_time-last_link_received_).toSec()>=T){ */
   if (true){
@@ -458,10 +461,7 @@ void linkCallback(const gazebo_msgs::LinkStatesConstPtr &link_states)
       const std::string cur_model_name = cur_name.substr(0, prependix_pos);
       const std::string cur_link_name = cur_name.substr(prependix_pos+2);
 
-
-      /* std::cout << "pose of " << cur_name << ": " << std::endl; */
-      /* std::cout << poses.at(it) << std::endl; */
-
+      // called recurring - updates the current pose of each LED
       if (_leds_by_name_.count(cur_link_name) != 0){
         std::scoped_lock lock(mtx_leds);
         _leds_by_name_.at(cur_link_name)->update_link_pose(cur_link_name, poses.at(it));
@@ -487,10 +487,11 @@ void ledInfoCallback(const ros::MessageEvent<uvdar_gazebo_plugin::LedInfo const>
   /* std::cout << "Getting message" << std::endl; */
   ros::M_string mhdr = event.getConnectionHeader();
   std::string topic = mhdr["topic"];
+
   std::string link_name = topic.substr(std::string("/gazebo/ledProperties/").length());
   const uvdar_gazebo_plugin::LedInfoConstPtr& led_info = event.getMessage();
-  /* std::cout << "UV CAM: receiving frequency of " << led_info->frequency.data << " for link  " << link_name << std::endl; */
-
+  /*std::cout << "UV CAM: Seq Bitrate " << led_info->seq_bitrate.data << " Message Bit Rate "<< led_info->mes_bitrate.data  <<" for link  " << link_name << "with LED-ID" <<  led_info->ID.data  << " and bool " << led_info->active.data << std::endl;
+*/
   if ((led_info->ID.data >= 0) && (led_info->ID.data < (int)(sequences_.size())))
     _leds_by_name_.at(link_name)->update_data(sequences_[led_info->ID.data],led_info->seq_bitrate.data, led_info->mes_bitrate.data);
   else
@@ -528,7 +529,7 @@ void ledModeCallback(const ros::MessageEvent<std_msgs::Int32 const>& event){
   ros::M_string mhdr = event.getConnectionHeader();
   std::string topic = mhdr["topic"];
   std::string link_name = topic.substr(std::string("/gazebo/ledMode/").length());
-  auto led_mode = event.getMessage();
+  auto led_mode = event.getMessage(); // get Metadata information about a message within a subscription callback
   /* std::cout << "UV CAM: receiving mode of " << led_mode->data << std::endl; */
   _leds_by_name_.at(link_name)->set_mode(led_mode->data);
 }
@@ -682,7 +683,10 @@ bool yieldRendering(CameraProps cam_props){
   /* } */
 //}
 
-/* drawPose_virtual //{ */
+/* converts the 3D Pose of each LED to the projection into each camera
+    - z = Radius of the LED Point
+    - returns true if LED is not occluded by obstacles 
+*/
   bool drawPose_virtual(std::pair<geometry_msgs::Pose,ignition::math::Pose3d> input_poses, cv::Point3d &output){
 
     /* if (!occlusion_initialized_) */

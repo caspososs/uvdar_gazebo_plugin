@@ -29,7 +29,7 @@ class ObjectMgr
   protected:
     std::string m_model_name;
     std::string m_attach_link_name;
-    geometry_msgs::Pose m_pose;
+    geometry_msgs::Pose m_pose; // pose of each LED - updated by update_link_pose 
     bool m_pose_initialized;
     bool m_control_own_movement;
 };
