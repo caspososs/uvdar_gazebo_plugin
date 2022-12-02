@@ -101,10 +101,10 @@ void LedMgr::update_timing(double i_seq_bit_rate, double i_mes_bit_rate){
   }
   // mes duration = 0  --- mes size = 0 --- mes bit rate = 60
   mes_duration = (double)(message.size())/mes_bit_rate;
-   std::cout << "updated: mes_bit_rate:" << mes_bit_rate << std::endl; 
-   std::cout << "updated: message size:" << message.size() << std::endl; 
-   std::cout << "updated: mes_duration:" << mes_duration << std::endl;
-   std::cout << "seq_duration:" << seq_duration <<std::endl; 
+  //  std::cout << "updated: mes_bit_rate:" << mes_bit_rate << std::endl; 
+  //  std::cout << "updated: message size:" << message.size() << std::endl; 
+  //  std::cout << "updated: mes_duration:" << mes_duration << std::endl;
+  //  std::cout << "seq_duration:" << seq_duration <<std::endl; 
 }
 
 char toHex(int input){
@@ -137,7 +137,7 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
     if (!frequency_initialized)
       return false;
 
-    if (f < 0.001001){ //p.m. equals zero = always on
+    if (f < 0.001){ //p.m. equals zero = always on
       output = m_pose;
       return true;
     }
@@ -149,11 +149,9 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
   }
   else if (mode == 0){
     dsi++;
-
-    // reset dsi print the current Signal 
     if (dsi>=DIAG_SIGNAL_LENGTH){
       dsi = 0;
-       std::cout << "Diagonal sequence:" << diag_seq << " with the diag signal:\n" << diag_signal << std::endl;
+      /* std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
     }
     if (!sequence_initialized){
       diag_signal[dsi] = '0';
@@ -164,11 +162,11 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
     // seq_index = from 0 to 13 dependent on the current time
     int seq_index = (int)(fmod(nowTime, seq_duration)*seq_bit_rate); // ( timeInSec % 0.23 ) * 60 
     seq_index = std::min((int)(sequence.size())-1,seq_index);//sanitization
-    // only update pose, when the sequence is 1 / LED is turned on
     if (sequence[seq_index]){
       output = m_pose;
       diag_signal[dsi] = '1';
       diag_order[dsi] = toHex(seq_index);
+      return true;
     }
     else{
       diag_signal[dsi] = '0';
@@ -180,7 +178,7 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
     dsi++;
     if (dsi>=DIAG_SIGNAL_LENGTH){
       dsi = 0;
-       /*std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
+      /* std::cout << "Signal from LED s:" << diag_seq << " was:\n" << diag_signal << "\n" << diag_order << std::endl; */
     }
     if (!message_initialized){
       diag_signal[dsi] = '0';
@@ -213,30 +211,7 @@ bool LedMgr::get_pose(geometry_msgs::Pose &output, double nowTime) {
       return false;
     }
   }
-  else if (mode == 2) { 
-    
-
-    // int seq_index = (int)(fmod(nowTime, seq_duration)*seq_bit_rate); // ( timeInSec % 0.23 ) * 60 
-    // seq_index = std::min((int)(sequence.size())-1,seq_index);//sanitization
-    // float modTime = fmod(nowTime, 0.032);
-    // std::cout << "The curr time " << nowTime << " mod Time "<<modTime << std::endl;
-    // bool high = true;
-
-    // // 1 = 0, 1 
-    // if (sequence[seq_index]){
-    //   if (high){
-    //     output = m_pose;
-    //     return true;
-    //   } else {
-    //     return false;
-    //   }
-    // } else {
-
-    //   return false;
-    // }
-  }
 
   return false;
   
 }
-

@@ -326,9 +326,9 @@ private:
               pt.x = output.x;
               pt.y = output.y;
               pt.z = output.z;
-              // std::cout << pt.x << " " << pt.y  << " " << pt.z << " " << std::endl;
+              std::cout << "The Points are " <<  pt.x << " " << pt.y  << " " << pt.z << " " << std::endl;
               msg_ptcl.points.push_back(pt);
-            }
+            } else { std::cout <<  "NO POINTS SEND" << std::endl;}
           }
         }
         cam.virtual_points_publisher.publish(msg_ptcl);
