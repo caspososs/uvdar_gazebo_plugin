@@ -1,0 +1,42 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/mrs/mrs_workspace/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/mrs/mrs_workspace/src/bluefox2/include/**",
+        "/home/mrs/mrs_workspace/src/camera_base/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mavros/libmavconn/include/**",
+        "/home/mrs/mrs_workspace/src/simulation/ros_packages/mavlink_sitl_gazebo/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mavros/mavros/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mavros/mavros_msgs/include/**",
+        "/home/mrs/mrs_workspace/src/simulation/ros_packages/mrs_gazebo_common_resources/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_lib/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_rviz_plugins/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_controllers/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_general/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_managers/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_odometry/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_status/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_trackers/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mrs_uav_trajectory_generation/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/thirdparty/nlopt_ros/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/mavros/test_mavros/include/**",
+        "/home/mrs/mrs_workspace/src/uav_core/ros_packages/thirdparty/tf2/tf2/include/**",
+        "/home/mrs/mrs_workspace/src/uvdar_core/include/**",
+        "/home/mrs/mrs_workspace/src/uvdar_gazebo_plugin/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

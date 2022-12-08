@@ -36,7 +36,7 @@ class LedMgr : public ObjectMgr
     int mode; //0 - static frequency, 1 - selected sequences
 
     std::vector<bool> sequence;
-    bool enable_manchester = true;
+    bool enable_manchester = false;
 
     std::vector<bool> message;
     double seq_duration; // time for 1 bit per frame [Bit / Frame] - if bigger than 1 -> Not possible
